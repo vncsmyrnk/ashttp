@@ -1,4 +1,4 @@
-# ashttp
+# HTTP Client as CLI
 
 A command-line HTTP client tool that simplifies API requests using configurable domain aliases and a CLI syntax. It is an HTTP client as a CLI.
 
