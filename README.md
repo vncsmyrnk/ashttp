@@ -1,6 +1,6 @@
 # ashttp
 
-A command-line HTTP client tool that simplifies API requests using configurable domain aliases and a CLI syntax.
+A command-line HTTP client tool that simplifies API requests using configurable domain aliases and a CLI syntax. It is an HTTP client as a CLI.
 
 ashttp is a Go-based HTTP client that allows you to make API requests using predefined domain aliases instead of full URLs. It's designed to streamline your workflow when working with multiple APIs by providing a simple, intuitive command-line interface with configuration-based domain management.
 
