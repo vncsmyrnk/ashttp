@@ -30,11 +30,11 @@ func (r Request) ToHTTPRequest(config config.Config) (*http.Request, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 	for k, v := range config.Headers {
-		req.Header.Add(k, v)
+		req.Header.Set(k, v)
 	}
 
 	for k, v := range r.Headers {
-		req.Header.Add(k, v)
+		req.Header.Set(k, v)
 	}
 
 	return req, nil
