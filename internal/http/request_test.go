@@ -310,7 +310,7 @@ func TestExecute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				for key, value := range tt.serverHeaders {
 					w.Header().Set(key, value)
 				}
@@ -412,7 +412,7 @@ func BenchmarkToHTTPRequest(b *testing.B) {
 }
 
 func BenchmarkExecute(b *testing.B) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprint(w, `{"result": "success"}`)
 	}))
 	defer server.Close()

@@ -29,7 +29,9 @@ var defaultConfig = ExternalConfig{
 
 func loadConfigFromFile(filePath string) (ExternalConfig, error) {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		createDefaultConfig(filePath)
+		if createErr := createDefaultConfig(filePath); createErr != nil {
+			return nil, createErr
+		}
 	}
 
 	data, err := os.ReadFile(filePath)

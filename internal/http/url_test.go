@@ -255,7 +255,7 @@ func TestPath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := Path(tt.pathComponents, tt.queryString)
 
-			if tt.queryString == nil || len(tt.queryString) == 0 {
+			if len(tt.queryString) == 0 {
 				require.Equal(t, tt.expectedURL, result, "URL should match exactly when no query parameters")
 				return
 			}

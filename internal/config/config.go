@@ -7,6 +7,7 @@ type Config struct {
 
 type DomainAlias string
 
+// nolint:revive
 type ConfigByDomainAlias map[DomainAlias]Config
 
 func GetConfigs() (ConfigByDomainAlias, error) {
