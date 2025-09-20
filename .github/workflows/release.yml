@@ -1,0 +1,70 @@
+name: Release workflow
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.25'
+
+      - name: Build binary
+        run: |
+          mkdir -p dist
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/ashttp-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: ashttp-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifact
+        id: download-build-artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List build artifacts generated
+        run: ls ./artifacts/**/*
+
+      - name: Build Changelog
+        id: github_release
+        uses: mikepenz/release-changelog-builder-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          draft: true
+          prerelease: false
+          files: |
+            artifacts/**/*
+          body: |
+            # Changelog
+
+            ${{ steps.github_release.outputs.changelog }}
+
+            Check the release assets for the binaries. To install it, just download the correct version for your system and move it to an executable path
