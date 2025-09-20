@@ -10,7 +10,7 @@ type DomainAlias string
 type ConfigByDomainAlias map[DomainAlias]Config
 
 func GetConfigs() (ConfigByDomainAlias, error) {
-	configs, err := loadConfig(defaultFilePath)
+	configs, err := loadConfigFromFile(defaultFilePath)
 	if err != nil {
 		return ConfigByDomainAlias{}, err
 	}

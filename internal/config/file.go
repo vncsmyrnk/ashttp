@@ -27,7 +27,7 @@ var defaultConfig = ExternalConfig{
 	},
 }
 
-func loadConfig(filePath string) (ExternalConfig, error) {
+func loadConfigFromFile(filePath string) (ExternalConfig, error) {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		createDefaultConfig(filePath)
 	}
