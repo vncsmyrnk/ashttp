@@ -9,6 +9,7 @@ test:
 
 coverage:
   go test -coverprofile=coverage.txt ./...
+  @sed -i 's/github\.com\///' coverage.txt
 
 build:
   go build -o dist/ashttp ./cmd
