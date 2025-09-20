@@ -1,0 +1,5 @@
+fixes:
+  - "github.com/::"
+
+codecov:
+  disable_default_path_fixes: true
