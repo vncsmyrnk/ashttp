@@ -55,3 +55,5 @@ ashttp httpbin users 456 profile --include "posts,comments"
 ```bash
 go install github.com/ashttp@latest
 ```
+
+Check the [releases page](https://github.com/vncsmyrnk/ashttp/releases) to see more details about versions and binaries.
