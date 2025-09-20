@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ashttp/internal"
+	"github.com/ashttp/internal/config"
+	internalhttp "github.com/ashttp/internal/http"
 )
 
 type Action struct {
@@ -46,18 +47,26 @@ func NewAction(args []string) (Action, error) {
 	return request, nil
 }
 
-func (a Action) Request() internal.Request {
-	pathCompnents := internal.PathComponents(a.URLPathComponents)
-	queryString := internal.QueryString(a.URLQuery)
+func (a Action) Request() internalhttp.Request {
+	pathCompnents := internalhttp.PathComponents(a.URLPathComponents)
+	queryString := internalhttp.QueryString(a.URLQuery)
 
-	return internal.Request{
-		Path:       internal.Path(pathCompnents, queryString),
+	return internalhttp.Request{
+		Path:       internalhttp.Path(pathCompnents, queryString),
 		HTTPMethod: http.MethodGet,
 	}
 }
 
-func (a Action) Config() internal.Config {
-	return internal.Config{
-		Domain: "https://httpbin.org",
+func (a Action) Config() (config.Config, error) {
+	configs, err := config.GetConfigs()
+	if err != nil {
+		return config.Config{}, err
 	}
+
+	domainAlias := config.DomainAlias(a.DomainAlias)
+	if config, ok := configs[domainAlias]; ok {
+		return config, nil
+	}
+
+	return config.Config{}, fmt.Errorf("failed to get config")
 }

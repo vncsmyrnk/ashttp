@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ashttp/internal"
+	"github.com/ashttp/internal/http"
 )
 
 func main() {
@@ -19,14 +19,17 @@ func main() {
 	}
 
 	request := action.Request()
-	config := action.Config()
+	config, err := action.Config()
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
 
 	req, err := request.ToHTTPRequest(config)
 	if err != nil {
 		log.Println(err)
 	}
 
-	response, err := internal.Execute(req)
+	response, err := http.Execute(req)
 	if err != nil {
 		log.Println(err)
 	}
