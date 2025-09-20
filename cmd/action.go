@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/ashttp/internal/config"
@@ -52,8 +51,7 @@ func (a Action) Request() internalhttp.Request {
 	queryString := internalhttp.QueryString(a.URLQuery)
 
 	return internalhttp.Request{
-		Path:       internalhttp.Path(pathCompnents, queryString),
-		HTTPMethod: http.MethodGet,
+		Path: internalhttp.Path(pathCompnents, queryString),
 	}
 }
 

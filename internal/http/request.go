@@ -11,10 +11,9 @@ import (
 )
 
 type Request struct {
-	Path       string
-	HTTPMethod string
-	Headers    map[string]string
-	Body       map[string]any
+	Path    string
+	Headers map[string]string
+	Body    map[string]any
 }
 
 func (r Request) ToHTTPRequest(config config.Config) (*http.Request, error) {
@@ -24,7 +23,7 @@ func (r Request) ToHTTPRequest(config config.Config) (*http.Request, error) {
 	}
 
 	url := fmt.Sprintf("%s/%s", config.Domain, r.Path)
-	req, err := http.NewRequest(r.HTTPMethod, url, bytes.NewBuffer(body))
+	req, err := http.NewRequest(http.MethodGet, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
