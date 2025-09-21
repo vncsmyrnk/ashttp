@@ -35,7 +35,8 @@ func (r Request) ToHTTPRequest(setting config.Setting) (*http.Request, error) {
 }
 
 func (r Request) buildHTTPRequest(setting config.Setting) (*http.Request, error) {
-	switch strings.ToUpper(r.Method) {
+	httpMethod := strings.ToUpper(r.Method)
+	switch httpMethod {
 	case http.MethodGet, http.MethodDelete:
 		queryString := QueryString(r.Arguments).ToURL()
 		url := fmt.Sprintf("%s/%s", setting.URL, r.Path)
@@ -43,7 +44,7 @@ func (r Request) buildHTTPRequest(setting config.Setting) (*http.Request, error)
 			url = fmt.Sprintf("%s?%s", url, queryString)
 		}
 
-		return http.NewRequest(r.Method, url, nil)
+		return http.NewRequest(httpMethod, url, nil)
 	default:
 		return nil, fmt.Errorf("method not suported")
 	}

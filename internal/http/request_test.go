@@ -25,14 +25,14 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 			name: "basic GET request with no arguments",
 			request: Request{
 				Path:      "users",
-				Method:    "GET",
+				Method:    "get",
 				Arguments: nil,
 			},
 			setting: config.Setting{
 				URL: "https://api.example.com",
 			},
 			possibleURLs:   []string{"https://api.example.com/users"},
-			expectedMethod: "GET",
+			expectedMethod: http.MethodGet,
 			expectedHeaders: map[string]string{
 				"Content-Type": "application/json",
 			},
@@ -41,7 +41,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 			name: "DELETE request with arguments",
 			request: Request{
 				Path:   "posts/123",
-				Method: "DELETE",
+				Method: "delete",
 				Arguments: map[string]string{
 					"force": "true",
 				},
@@ -53,7 +53,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				},
 			},
 			possibleURLs:   []string{"https://jsonplaceholder.typicode.com/posts/123?force=true"},
-			expectedMethod: "DELETE",
+			expectedMethod: http.MethodDelete,
 			expectedHeaders: map[string]string{
 				"Content-Type":  "application/json",
 				"Authorization": "Bearer token123",
@@ -63,7 +63,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 			name: "GET request with multiple arguments",
 			request: Request{
 				Path:   "api/v1/data",
-				Method: "GET",
+				Method: "get",
 				Arguments: map[string]string{
 					"filter": "active",
 					"limit":  "100",
@@ -79,7 +79,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				"https://localhost:8080/api/v1/data?filter=active&limit=100",
 				"https://localhost:8080/api/v1/data?limit=100&filter=active",
 			},
-			expectedMethod: "GET",
+			expectedMethod: http.MethodGet,
 			expectedHeaders: map[string]string{
 				"Content-Type":    "application/json",
 				"X-Custom-Header": "custom-value",
@@ -89,7 +89,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 			name: "request with unsupported method",
 			request: Request{
 				Path:   "users",
-				Method: "POST", // Not supported by buildHTTPRequest
+				Method: "post", // Not supported by buildHTTPRequest
 			},
 			setting: config.Setting{
 				URL: "https://api.example.com",
@@ -100,13 +100,13 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 			name: "empty path",
 			request: Request{
 				Path:   "",
-				Method: "GET",
+				Method: "get",
 			},
 			setting: config.Setting{
 				URL: "https://api.example.com",
 			},
 			possibleURLs:   []string{"https://api.example.com/"},
-			expectedMethod: "GET",
+			expectedMethod: http.MethodGet,
 			expectedHeaders: map[string]string{
 				"Content-Type": "application/json",
 			},
@@ -115,7 +115,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 			name: "headers override - request headers take precedence",
 			request: Request{
 				Path:   "override-test",
-				Method: "GET",
+				Method: "get",
 				Headers: map[string]string{
 					"Authorization": "Bearer new-token",
 					"Custom-Header": "request-value",
@@ -129,7 +129,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				},
 			},
 			possibleURLs:   []string{"https://api.test.com/override-test"},
-			expectedMethod: "GET",
+			expectedMethod: http.MethodGet,
 			expectedHeaders: map[string]string{
 				"Content-Type":   "application/json",
 				"Authorization":  "Bearer new-token",
