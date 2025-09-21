@@ -6,12 +6,12 @@
 
 # An HTTP Client as a CLI
 
-A command-line HTTP client tool that simplifies API requests using configurable domain aliases and a CLI syntax. It is an HTTP client as a CLI.
+A command-line HTTP client tool that simplifies API requests using configurable domain aliases and a CLI syntax. It is a CLI meant to simplify constant and useful HTTP requests without relying on more complex HTTP clients like cURL.
 
-ashttp is a Go-based HTTP client that allows you to make API requests using predefined domain aliases instead of full URLs. It's designed to streamline your workflow when working with multiple APIs by providing a simple, intuitive command-line interface with configuration-based domain management.
+It allows you to make API requests using predefined domain aliases instead of full URLs. It's designed to streamline your workflow when working with multiple APIs by providing a simple, intuitive command-line interface with configuration-based domain management.
 
 ```bash
-ashttp httpbin users 456 profile --include "posts,comments"
+ashttp httpbin get users 456 profile --include "posts,comments"
 
 # Will be equivalent to:
 # curl https://httpbin.dev/anything/users/456/profile?include=posts,comments
@@ -22,7 +22,7 @@ This solves the common overhead problem of managing multiple API endpoints with 
 ## Usage
 
 ```bash
-ashttp <domain-alias> [path-components...] [--query-key query-value...]
+ashttp <domain-alias> <http-method> [path-components...] [--option value]
 ```
 
 ## Configuration
@@ -43,7 +43,7 @@ The configuration file is automatically created at `~/.config/ashttp/config.json
 Using this configuration, the command below demonstrates how ashttp translates to the equivalent curl request:
 
 ```bash
-ashttp httpbin users 456 profile --include "posts,comments"
+ashttp httpbin get users 456 profile --include "posts,comments"
 
 # Will be equivalent to:
 # curl https://httpbin.dev/anything/users/456/profile?include=posts,comments \
@@ -55,5 +55,9 @@ ashttp httpbin users 456 profile --include "posts,comments"
 ```bash
 go install github.com/ashttp@latest
 ```
+
+## Development
+
+This project is currently under development so unexpected behaviors may happen. Only `GET` and `DELETE` methods are supported until now.
 
 Check the [releases page](https://github.com/vncsmyrnk/ashttp/releases) to see more details about versions and binaries.

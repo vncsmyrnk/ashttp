@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -9,13 +10,20 @@ import (
 	"github.com/ashttp/internal/http"
 )
 
+var cliFormatExpected = "<domain-alias> <http-method> [path-components...] [--option value]"
+
 func main() {
 	flag.Parse()
 	args := flag.Args()
 
 	action, err := NewAction(args)
 	if err != nil {
-		fatal("failed to build action from arguments: %v", err)
+		switch {
+		case errors.Is(err, errInvalidFormat):
+			help()
+		default:
+			fatal("failed to build action from arguments: %v", err)
+		}
 	}
 
 	request := action.Request()
@@ -60,4 +68,9 @@ func prettyResponse(resp []byte) (string, error) {
 func fatal(format string, v ...any) {
 	fmt.Printf("[error] %s\n", fmt.Sprintf(format, v...))
 	os.Exit(1)
+}
+
+func help() {
+	fmt.Printf("usage: %s\n", cliFormatExpected)
+	os.Exit(0)
 }

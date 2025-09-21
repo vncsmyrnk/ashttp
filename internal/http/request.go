@@ -1,35 +1,29 @@
 package http
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/ashttp/internal/config"
 )
 
 type Request struct {
-	Path    string
-	Headers map[string]string
-	Body    map[string]any
+	Path      string
+	Method    string
+	Headers   map[string]string
+	Arguments map[string]string
 }
 
-func (r Request) ToHTTPRequest(config config.Setting) (*http.Request, error) {
-	body, err := json.Marshal(r.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	url := fmt.Sprintf("%s/%s", config.Domain, r.Path)
-	req, err := http.NewRequest(http.MethodGet, url, bytes.NewBuffer(body))
+func (r Request) ToHTTPRequest(setting config.Setting) (*http.Request, error) {
+	req, err := r.buildHTTPRequest(setting)
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	for k, v := range config.Headers {
+	for k, v := range setting.Headers {
 		req.Header.Set(k, v)
 	}
 
@@ -38,6 +32,21 @@ func (r Request) ToHTTPRequest(config config.Setting) (*http.Request, error) {
 	}
 
 	return req, nil
+}
+
+func (r Request) buildHTTPRequest(setting config.Setting) (*http.Request, error) {
+	switch strings.ToUpper(r.Method) {
+	case http.MethodGet, http.MethodDelete:
+		queryString := QueryString(r.Arguments).ToURL()
+		url := fmt.Sprintf("%s/%s", setting.Domain, r.Path)
+		if queryString != "" {
+			url = fmt.Sprintf("%s?%s", url, queryString)
+		}
+
+		return http.NewRequest(r.Method, url, nil)
+	default:
+		return nil, fmt.Errorf("method not suported")
+	}
 }
 
 func Execute(req *http.Request) ([]byte, error) {

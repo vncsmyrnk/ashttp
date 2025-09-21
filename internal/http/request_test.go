@@ -1,9 +1,7 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -20,192 +18,121 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 		setting         config.Setting
 		expectedURL     string
 		expectedMethod  string
-		expectedBody    string
 		expectedHeaders map[string]string
 		expectError     bool
 	}{
 		{
-			name: "basic request with no headers or body",
+			name: "basic GET request with no arguments",
 			request: Request{
-				Path:    "users",
-				Headers: nil,
-				Body:    nil,
+				Path:      "users",
+				Method:    "GET",
+				Arguments: nil,
 			},
 			setting: config.Setting{
-				Domain:  "https://api.example.com",
-				Headers: nil,
+				Domain: "https://api.example.com",
 			},
 			expectedURL:    "https://api.example.com/users",
 			expectedMethod: "GET",
-			expectedBody:   "null",
 			expectedHeaders: map[string]string{
 				"Content-Type": "application/json",
 			},
-			expectError: false,
 		},
 		{
-			name: "request with path and setting headers",
+			name: "DELETE request with arguments",
 			request: Request{
-				Path:    "posts/123",
-				Headers: nil,
-				Body:    nil,
+				Path:   "posts/123",
+				Method: "DELETE",
+				Arguments: map[string]string{
+					"force": "true",
+				},
 			},
 			setting: config.Setting{
 				Domain: "https://jsonplaceholder.typicode.com",
 				Headers: map[string]string{
 					"Authorization": "Bearer token123",
-					"User-Agent":    "ashttp/1.0",
 				},
 			},
-			expectedURL:    "https://jsonplaceholder.typicode.com/posts/123",
-			expectedMethod: "GET",
-			expectedBody:   "null",
+			expectedURL:    "https://jsonplaceholder.typicode.com/posts/123?force=true",
+			expectedMethod: "DELETE",
 			expectedHeaders: map[string]string{
 				"Content-Type":  "application/json",
 				"Authorization": "Bearer token123",
-				"User-Agent":    "ashttp/1.0",
 			},
-			expectError: false,
 		},
 		{
-			name: "request with custom headers",
+			name: "GET request with multiple arguments",
 			request: Request{
-				Path: "api/v1/data",
+				Path:   "api/v1/data",
+				Method: "GET",
+				Arguments: map[string]string{
+					"filter": "active",
+					"limit":  "100",
+				},
 				Headers: map[string]string{
 					"X-Custom-Header": "custom-value",
-					"Accept":          "application/json",
 				},
-				Body: nil,
 			},
 			setting: config.Setting{
 				Domain: "https://localhost:8080",
-				Headers: map[string]string{
-					"Authorization": "Basic dXNlcjpwYXNz",
-				},
 			},
-			expectedURL:    "https://localhost:8080/api/v1/data",
+			expectedURL:    "https://localhost:8080/api/v1/data?filter=active&limit=100",
 			expectedMethod: "GET",
-			expectedBody:   "null",
 			expectedHeaders: map[string]string{
 				"Content-Type":    "application/json",
-				"Authorization":   "Basic dXNlcjpwYXNz",
 				"X-Custom-Header": "custom-value",
-				"Accept":          "application/json",
 			},
-			expectError: false,
 		},
 		{
-			name: "request with JSON body",
+			name: "request with unsupported method",
 			request: Request{
-				Path:    "users",
-				Headers: nil,
-				Body: map[string]any{
-					"name":  "John Doe",
-					"email": "john@example.com",
-					"age":   30,
-				},
+				Path:   "users",
+				Method: "POST", // Not supported by buildHTTPRequest
 			},
 			setting: config.Setting{
-				Domain:  "https://api.example.com",
-				Headers: nil,
-			},
-			expectedURL:    "https://api.example.com/users",
-			expectedMethod: "GET",
-			expectedBody:   `{"age":30,"email":"john@example.com","name":"John Doe"}`,
-			expectedHeaders: map[string]string{
-				"Content-Type": "application/json",
-			},
-			expectError: false,
-		},
-		{
-			name: "request with complex nested body",
-			request: Request{
-				Path:    "complex",
-				Headers: nil,
-				Body: map[string]any{
-					"user": map[string]any{
-						"name":    "Jane",
-						"details": []string{"admin", "user"},
-					},
-					"meta": map[string]any{
-						"version": 1.2,
-						"active":  true,
-					},
-				},
-			},
-			setting: config.Setting{
-				Domain:  "https://test.com",
-				Headers: nil,
-			},
-			expectedURL:    "https://test.com/complex",
-			expectedMethod: "GET",
-			expectedBody:   `{"meta":{"active":true,"version":1.2},"user":{"details":["admin","user"],"name":"Jane"}}`,
-			expectedHeaders: map[string]string{
-				"Content-Type": "application/json",
-			},
-			expectError: false,
-		},
-		{
-			name: "request with unmarshalable body should fail",
-			request: Request{
-				Path:    "test",
-				Headers: nil,
-				Body: map[string]any{
-					"invalid": make(chan int), // channels cannot be marshaled to JSON
-				},
-			},
-			setting: config.Setting{
-				Domain:  "https://example.com",
-				Headers: nil,
+				Domain: "https://api.example.com",
 			},
 			expectError: true,
 		},
 		{
 			name: "empty path",
 			request: Request{
-				Path:    "",
-				Headers: nil,
-				Body:    nil,
+				Path:   "",
+				Method: "GET",
 			},
 			setting: config.Setting{
-				Domain:  "https://api.example.com",
-				Headers: nil,
+				Domain: "https://api.example.com",
 			},
 			expectedURL:    "https://api.example.com/",
 			expectedMethod: "GET",
-			expectedBody:   "null",
 			expectedHeaders: map[string]string{
 				"Content-Type": "application/json",
 			},
-			expectError: false,
 		},
 		{
 			name: "headers override - request headers take precedence",
 			request: Request{
-				Path: "override-test",
+				Path:   "override-test",
+				Method: "GET",
 				Headers: map[string]string{
-					"Authorization": "Bearer new-token", // Should override config auth
+					"Authorization": "Bearer new-token",
 					"Custom-Header": "request-value",
 				},
-				Body: nil,
 			},
 			setting: config.Setting{
 				Domain: "https://api.test.com",
 				Headers: map[string]string{
-					"Authorization":  "Bearer old-token", // Should be overridden
+					"Authorization":  "Bearer old-token",
 					"Default-Header": "config-value",
 				},
 			},
 			expectedURL:    "https://api.test.com/override-test",
 			expectedMethod: "GET",
-			expectedBody:   "null",
 			expectedHeaders: map[string]string{
 				"Content-Type":   "application/json",
-				"Authorization":  "Bearer new-token", // Request header wins
+				"Authorization":  "Bearer new-token",
 				"Custom-Header":  "request-value",
 				"Default-Header": "config-value",
 			},
-			expectError: false,
 		},
 	}
 
@@ -222,21 +149,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 			require.Equal(t, tt.expectedURL, req.URL.String(), "URL should match expected value")
 			require.Equal(t, tt.expectedMethod, req.Method, "HTTP method should match expected value")
 
-			if req.Body != nil {
-				bodyBytes, err := io.ReadAll(req.Body)
-				require.NoError(t, err, "Should be able to read request body")
-
-				var actualBody any
-				var expectedBody any
-
-				err = json.Unmarshal(bodyBytes, &actualBody)
-				require.NoError(t, err, "Should be able to unmarshal actual body")
-
-				err = json.Unmarshal([]byte(tt.expectedBody), &expectedBody)
-				require.NoError(t, err, "Should be able to unmarshal expected body")
-
-				require.Equal(t, expectedBody, actualBody, "Request body should match expected value")
-			}
+			require.True(t, req.Body == nil || req.ContentLength == 0, "Request body should be empty")
 
 			for expectedKey, expectedValue := range tt.expectedHeaders {
 				actualValue := req.Header.Get(expectedKey)
@@ -352,6 +265,7 @@ func TestExecute_Integration(t *testing.T) {
 			require.Equal(t, "application/json", r.Header.Get("Content-Type"), "Content-Type header should be application/json")
 			require.Equal(t, "Bearer test-token", r.Header.Get("Authorization"), "Authorization header should be 'Bearer test-token'")
 			require.Equal(t, "value", r.Header.Get("X-Custom"), "Custom header should be 'value'")
+			require.Equal(t, "test", r.URL.Query().Get("query"), "URL query param 'query' should be 'test'")
 
 			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprint(w, expectedResponse)
@@ -359,11 +273,12 @@ func TestExecute_Integration(t *testing.T) {
 		defer server.Close()
 
 		ashttpRequest := Request{
-			Path: "users/1",
+			Path:   "users/1",
+			Method: "GET",
 			Headers: map[string]string{
 				"X-Custom": "value",
 			},
-			Body: map[string]any{
+			Arguments: map[string]string{
 				"query": "test",
 			},
 		}
@@ -387,11 +302,12 @@ func TestExecute_Integration(t *testing.T) {
 
 func BenchmarkToHTTPRequest(b *testing.B) {
 	request := Request{
-		Path: "api/v1/users/123",
+		Path:   "api/v1/users/123",
+		Method: "GET",
 		Headers: map[string]string{
 			"X-Test": "value",
 		},
-		Body: map[string]any{
+		Arguments: map[string]string{
 			"name":  "John",
 			"email": "john@example.com",
 		},

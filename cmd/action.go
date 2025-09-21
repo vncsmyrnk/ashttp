@@ -1,7 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/ashttp/internal/config"
@@ -10,33 +13,50 @@ import (
 
 type Action struct {
 	DomainAlias       string
+	HTTPMethod        string
 	URLPathComponents []string
-	URLQuery          map[string]string
+	Options           map[string]string
 }
 
+var acceptedMethods = func() []string {
+	methods := []string{http.MethodGet, http.MethodDelete}
+	for i := range methods {
+		methods[i] = strings.ToLower(methods[i])
+	}
+	return methods
+}()
+
+var errInvalidFormat = errors.New("invalid format")
+
 func NewAction(args []string) (Action, error) {
-	if len(args) == 0 {
-		return Action{}, fmt.Errorf("empty arguments")
+	if len(args) < 2 {
+		return Action{}, fmt.Errorf("%w: empty arguments", errInvalidFormat)
+	}
+
+	httpMethod := args[1]
+	if err := validateHTTPMethod(httpMethod); err != nil {
+		return Action{}, fmt.Errorf("unsuported http method: %w", err)
 	}
 
 	request := Action{
 		DomainAlias:       args[0],
+		HTTPMethod:        httpMethod,
 		URLPathComponents: make([]string, 0, len(args)),
-		URLQuery:          make(map[string]string, len(args)),
+		Options:           make(map[string]string, len(args)),
 	}
 
 	readingFlag := false
 	lastFlag := ""
-	for _, arg := range args[1:] {
+	for _, arg := range args[2:] {
 		if strings.HasPrefix(arg, "--") {
 			readingFlag = true
 			lastFlag = strings.TrimPrefix(arg, "--")
-			request.URLQuery[lastFlag] = ""
+			request.Options[lastFlag] = ""
 			continue
 		}
 
 		if readingFlag {
-			request.URLQuery[lastFlag] = arg
+			request.Options[lastFlag] = arg
 			continue
 		}
 
@@ -48,10 +68,11 @@ func NewAction(args []string) (Action, error) {
 
 func (a Action) Request() internalhttp.Request {
 	pathCompnents := internalhttp.PathComponents(a.URLPathComponents)
-	queryString := internalhttp.QueryString(a.URLQuery)
 
 	return internalhttp.Request{
-		Path: internalhttp.Path(pathCompnents, queryString),
+		Path:      strings.Join(pathCompnents, "/"),
+		Method:    a.HTTPMethod,
+		Arguments: a.Options,
 	}
 }
 
@@ -68,4 +89,11 @@ func (a Action) Setting() (config.Setting, error) {
 
 	return config.Setting{}, fmt.Errorf(
 		"no config found for %s, make sure it exists at %s", domainAlias, config.GetDefaultSettingPath())
+}
+
+func validateHTTPMethod(method string) error {
+	if !slices.Contains(acceptedMethods, method) {
+		return fmt.Errorf("invalid http method, only %s are supported", strings.Join(acceptedMethods, ", "))
+	}
+	return nil
 }
