@@ -1,33 +1,33 @@
 package config
 
 type Setting struct {
-	Domain  string
+	URL     string
 	Headers map[string]string
 }
 
-type DomainAlias string
+type URLAlias string
 
-type SettingByDomainAlias map[DomainAlias]Setting
+type SettingByURLAlias map[URLAlias]Setting
 
-func GetSettings() (SettingByDomainAlias, error) {
+func GetSettings() (SettingByURLAlias, error) {
 	settings, err := loadSettingFromFile(defaultFilePath)
 	if err != nil {
-		return SettingByDomainAlias{}, err
+		return SettingByURLAlias{}, err
 	}
 
 	return settingsFromExternalSettings(settings), nil
 }
 
-func GetDefaultSettingPath() string {
+func GetDefaultConfigPath() string {
 	return defaultFilePath
 }
 
-func settingsFromExternalSettings(externalSettings ExternalSetting) SettingByDomainAlias {
-	settings := make(SettingByDomainAlias)
+func settingsFromExternalSettings(externalSettings ExternalSetting) SettingByURLAlias {
+	settings := make(SettingByURLAlias)
 	for k, v := range externalSettings {
-		domainAlias := DomainAlias(k)
-		settings[domainAlias] = Setting{
-			Domain:  v.URL,
+		urlAlias := URLAlias(k)
+		settings[urlAlias] = Setting{
+			URL:     v.URL,
 			Headers: v.DefaultHeaders,
 		}
 	}

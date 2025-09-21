@@ -6,9 +6,9 @@
 
 # An HTTP Client as a CLI
 
-A command-line HTTP client tool that simplifies API requests using configurable domain aliases and a CLI syntax. It is a CLI meant to simplify constant and useful HTTP requests without relying on more complex HTTP clients like cURL.
+A command-line HTTP client tool that simplifies API requests using configurable URL aliases and a CLI syntax. It is a CLI meant to simplify constant and useful HTTP requests without relying on more complex HTTP clients like cURL.
 
-It allows you to make API requests using predefined domain aliases instead of full URLs. It's designed to streamline your workflow when working with multiple APIs by providing a simple, intuitive command-line interface with configuration-based domain management.
+It allows you to make API requests using predefined URL aliases instead of full URLs. It's designed to streamline your workflow when working with multiple APIs by providing a simple, intuitive command-line interface with configuration-based URL management.
 
 ```bash
 ashttp httpbin get users 456 profile --include "posts,comments"
@@ -22,7 +22,7 @@ This solves the common overhead problem of managing multiple API endpoints with 
 ## Usage
 
 ```bash
-ashttp <domain-alias> <http-method> [path-components...] [--option value]
+ashttp <URL-alias> <http-method> [path-components...] [--option value]
 ```
 
 ## Configuration

@@ -23,7 +23,7 @@ func TestLoadSettingFromFile(t *testing.T) {
 				configPath := filepath.Join(tmpDir, "config.json")
 
 				testSetting := ExternalSetting{
-					"example": ExternalSettingDomainAlias{
+					"example": ExternalSettingURLAlias{
 						URL: "https://example.com",
 						DefaultHeaders: map[string]string{
 							"Content-Type": "application/json",
@@ -40,7 +40,7 @@ func TestLoadSettingFromFile(t *testing.T) {
 				return configPath
 			},
 			expectedSetting: ExternalSetting{
-				"example": ExternalSettingDomainAlias{
+				"example": ExternalSettingURLAlias{
 					URL: "https://example.com",
 					DefaultHeaders: map[string]string{
 						"Content-Type": "application/json",
@@ -178,16 +178,16 @@ func TestLoadSettingIntegration(t *testing.T) {
 		expectedLoadSuccess bool
 	}{
 		{
-			name: "complex setting with multiple domains",
+			name: "complex setting with multiple URLs",
 			setting: ExternalSetting{
-				"api": ExternalSettingDomainAlias{
+				"api": ExternalSettingURLAlias{
 					URL: "https://api.example.com",
 					DefaultHeaders: map[string]string{
 						"Authorization": "Bearer token123",
 						"Content-Type":  "application/json",
 					},
 				},
-				"staging": ExternalSettingDomainAlias{
+				"staging": ExternalSettingURLAlias{
 					URL: "https://staging.example.com",
 					DefaultHeaders: map[string]string{
 						"X-Environment": "staging",
@@ -199,7 +199,7 @@ func TestLoadSettingIntegration(t *testing.T) {
 		{
 			name: "setting with empty headers",
 			setting: ExternalSetting{
-				"simple": ExternalSettingDomainAlias{
+				"simple": ExternalSettingURLAlias{
 					URL:            "https://simple.example.com",
 					DefaultHeaders: map[string]string{},
 				},
@@ -209,7 +209,7 @@ func TestLoadSettingIntegration(t *testing.T) {
 		{
 			name: "setting with nil headers",
 			setting: ExternalSetting{
-				"minimal": ExternalSettingDomainAlias{
+				"minimal": ExternalSettingURLAlias{
 					URL:            "https://minimal.example.com",
 					DefaultHeaders: nil,
 				},

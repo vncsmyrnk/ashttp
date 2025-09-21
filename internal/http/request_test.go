@@ -16,7 +16,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 		name            string
 		request         Request
 		setting         config.Setting
-		expectedURL     string
+		possibleURLs    []string
 		expectedMethod  string
 		expectedHeaders map[string]string
 		expectError     bool
@@ -29,9 +29,9 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				Arguments: nil,
 			},
 			setting: config.Setting{
-				Domain: "https://api.example.com",
+				URL: "https://api.example.com",
 			},
-			expectedURL:    "https://api.example.com/users",
+			possibleURLs:   []string{"https://api.example.com/users"},
 			expectedMethod: "GET",
 			expectedHeaders: map[string]string{
 				"Content-Type": "application/json",
@@ -47,12 +47,12 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				},
 			},
 			setting: config.Setting{
-				Domain: "https://jsonplaceholder.typicode.com",
+				URL: "https://jsonplaceholder.typicode.com",
 				Headers: map[string]string{
 					"Authorization": "Bearer token123",
 				},
 			},
-			expectedURL:    "https://jsonplaceholder.typicode.com/posts/123?force=true",
+			possibleURLs:   []string{"https://jsonplaceholder.typicode.com/posts/123?force=true"},
 			expectedMethod: "DELETE",
 			expectedHeaders: map[string]string{
 				"Content-Type":  "application/json",
@@ -73,9 +73,12 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				},
 			},
 			setting: config.Setting{
-				Domain: "https://localhost:8080",
+				URL: "https://localhost:8080",
 			},
-			expectedURL:    "https://localhost:8080/api/v1/data?filter=active&limit=100",
+			possibleURLs: []string{
+				"https://localhost:8080/api/v1/data?filter=active&limit=100",
+				"https://localhost:8080/api/v1/data?limit=100&filter=active",
+			},
 			expectedMethod: "GET",
 			expectedHeaders: map[string]string{
 				"Content-Type":    "application/json",
@@ -89,7 +92,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				Method: "POST", // Not supported by buildHTTPRequest
 			},
 			setting: config.Setting{
-				Domain: "https://api.example.com",
+				URL: "https://api.example.com",
 			},
 			expectError: true,
 		},
@@ -100,9 +103,9 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				Method: "GET",
 			},
 			setting: config.Setting{
-				Domain: "https://api.example.com",
+				URL: "https://api.example.com",
 			},
-			expectedURL:    "https://api.example.com/",
+			possibleURLs:   []string{"https://api.example.com/"},
 			expectedMethod: "GET",
 			expectedHeaders: map[string]string{
 				"Content-Type": "application/json",
@@ -119,13 +122,13 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				},
 			},
 			setting: config.Setting{
-				Domain: "https://api.test.com",
+				URL: "https://api.test.com",
 				Headers: map[string]string{
 					"Authorization":  "Bearer old-token",
 					"Default-Header": "config-value",
 				},
 			},
-			expectedURL:    "https://api.test.com/override-test",
+			possibleURLs:   []string{"https://api.test.com/override-test"},
 			expectedMethod: "GET",
 			expectedHeaders: map[string]string{
 				"Content-Type":   "application/json",
@@ -146,7 +149,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 			}
 
 			require.NoError(t, err, "ToHTTPRequest() should not return an error")
-			require.Equal(t, tt.expectedURL, req.URL.String(), "URL should match expected value")
+			require.Contains(t, tt.possibleURLs, req.URL.String(), "URL should match one of the possible valid URLs")
 			require.Equal(t, tt.expectedMethod, req.Method, "HTTP method should match expected value")
 
 			require.True(t, req.Body == nil || req.ContentLength == 0, "Request body should be empty")
@@ -284,7 +287,7 @@ func TestExecute_Integration(t *testing.T) {
 		}
 
 		cfg := config.Setting{
-			Domain: server.URL,
+			URL: server.URL,
 			Headers: map[string]string{
 				"Authorization": "Bearer test-token",
 			},
@@ -314,7 +317,7 @@ func BenchmarkToHTTPRequest(b *testing.B) {
 	}
 
 	setting := config.Setting{
-		Domain: "https://api.example.com",
+		URL: "https://api.example.com",
 		Headers: map[string]string{
 			"Authorization": "Bearer token",
 		},

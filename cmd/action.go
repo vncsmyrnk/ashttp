@@ -12,7 +12,7 @@ import (
 )
 
 type Action struct {
-	DomainAlias       string
+	URLAlias          string
 	HTTPMethod        string
 	URLPathComponents []string
 	Options           map[string]string
@@ -39,7 +39,7 @@ func NewAction(args []string) (Action, error) {
 	}
 
 	request := Action{
-		DomainAlias:       args[0],
+		URLAlias:          args[0],
 		HTTPMethod:        httpMethod,
 		URLPathComponents: make([]string, 0, len(args)),
 		Options:           make(map[string]string, len(args)),
@@ -82,13 +82,13 @@ func (a Action) Setting() (config.Setting, error) {
 		return config.Setting{}, err
 	}
 
-	domainAlias := config.DomainAlias(a.DomainAlias)
-	if config, ok := settings[domainAlias]; ok {
+	urlAlias := config.URLAlias(a.URLAlias)
+	if config, ok := settings[urlAlias]; ok {
 		return config, nil
 	}
 
 	return config.Setting{}, fmt.Errorf(
-		"no config found for %s, make sure it exists at %s", domainAlias, config.GetDefaultSettingPath())
+		"no config found for %s, make sure it exists at %s", urlAlias, config.GetDefaultConfigPath())
 }
 
 func validateHTTPMethod(method string) error {

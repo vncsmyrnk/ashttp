@@ -10,7 +10,7 @@ import (
 	"github.com/ashttp/internal/http"
 )
 
-var cliFormatExpected = "<domain-alias> <http-method> [path-components...] [--option value]"
+var cliFormatExpected = "<URL-alias> <http-method> [path-components...] [--option value]"
 
 func main() {
 	flag.Parse()

@@ -8,18 +8,18 @@ import (
 	"path/filepath"
 )
 
-type ExternalSettingDomainAlias struct {
+type ExternalSettingURLAlias struct {
 	URL            string            `json:"url"`
 	DefaultHeaders map[string]string `json:"defaultHeaders"`
 }
 
-type ExternalSetting map[string]ExternalSettingDomainAlias
+type ExternalSetting map[string]ExternalSettingURLAlias
 
 var defaultFileFolder = path.Join(os.ExpandEnv("$HOME"), ".config", "ashttp")
 var defaultFilePath = path.Join(defaultFileFolder, "config.json")
 
 var defaultSetting = ExternalSetting{
-	"httpbin": ExternalSettingDomainAlias{
+	"httpbin": ExternalSettingURLAlias{
 		URL: "https://httpbin.dev/anything",
 		DefaultHeaders: map[string]string{
 			"authorization": "123",

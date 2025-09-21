@@ -12,7 +12,7 @@ func TestGetSettings(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupMockFile  func(t *testing.T) (cleanup func())
-		expectedResult SettingByDomainAlias
+		expectedResult SettingByURLAlias
 		expectError    bool
 	}{
 		{
@@ -28,9 +28,9 @@ func TestGetSettings(t *testing.T) {
 					defaultFilePath = originalPath
 				}
 			},
-			expectedResult: SettingByDomainAlias{
-				DomainAlias("httpbin"): Setting{
-					Domain: "https://httpbin.dev/anything",
+			expectedResult: SettingByURLAlias{
+				URLAlias("httpbin"): Setting{
+					URL: "https://httpbin.dev/anything",
 					Headers: map[string]string{
 						"authorization": "123",
 					},
@@ -70,16 +70,16 @@ func TestGetSettings(t *testing.T) {
 					defaultFilePath = originalPath
 				}
 			},
-			expectedResult: SettingByDomainAlias{
-				DomainAlias("api"): Setting{
-					Domain: "https://api.example.com",
+			expectedResult: SettingByURLAlias{
+				URLAlias("api"): Setting{
+					URL: "https://api.example.com",
 					Headers: map[string]string{
 						"Authorization": "Bearer token123",
 						"Content-Type":  "application/json",
 					},
 				},
-				DomainAlias("staging"): Setting{
-					Domain: "https://staging.example.com",
+				URLAlias("staging"): Setting{
+					URL: "https://staging.example.com",
 					Headers: map[string]string{
 						"X-Environment": "staging",
 					},
@@ -103,7 +103,7 @@ func TestGetSettings(t *testing.T) {
 					defaultFilePath = originalPath
 				}
 			},
-			expectedResult: SettingByDomainAlias{},
+			expectedResult: SettingByURLAlias{},
 			expectError:    false,
 		},
 		{
@@ -122,7 +122,7 @@ func TestGetSettings(t *testing.T) {
 					defaultFilePath = originalPath
 				}
 			},
-			expectedResult: SettingByDomainAlias{},
+			expectedResult: SettingByURLAlias{},
 			expectError:    true,
 		},
 	}
@@ -136,7 +136,7 @@ func TestGetSettings(t *testing.T) {
 
 			if tt.expectError {
 				require.Error(t, err)
-				require.Equal(t, SettingByDomainAlias{}, result)
+				require.Equal(t, SettingByURLAlias{}, result)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expectedResult, result)
@@ -145,25 +145,35 @@ func TestGetSettings(t *testing.T) {
 	}
 }
 
+func TestGetDefaultConfigPath(t *testing.T) {
+	homeDir, err := os.UserHomeDir()
+	require.NoError(t, err, "should be able to get user home directory")
+
+	expectedPath := filepath.Join(homeDir, ".config", "ashttp", "config.json")
+	actualPath := GetDefaultConfigPath()
+
+	require.Equal(t, expectedPath, actualPath, "default config path should match expected path")
+}
+
 func TestSettingsFromExternalSettings(t *testing.T) {
 	tests := []struct {
 		name             string
 		externalSettings ExternalSetting
-		expectedResult   SettingByDomainAlias
+		expectedResult   SettingByURLAlias
 	}{
 		{
-			name: "single domain conversion",
+			name: "single URL conversion",
 			externalSettings: ExternalSetting{
-				"api": ExternalSettingDomainAlias{
+				"api": ExternalSettingURLAlias{
 					URL: "https://api.example.com",
 					DefaultHeaders: map[string]string{
 						"Authorization": "Bearer token123",
 					},
 				},
 			},
-			expectedResult: SettingByDomainAlias{
-				DomainAlias("api"): Setting{
-					Domain: "https://api.example.com",
+			expectedResult: SettingByURLAlias{
+				URLAlias("api"): Setting{
+					URL: "https://api.example.com",
 					Headers: map[string]string{
 						"Authorization": "Bearer token123",
 					},
@@ -171,44 +181,44 @@ func TestSettingsFromExternalSettings(t *testing.T) {
 			},
 		},
 		{
-			name: "multiple domains conversion",
+			name: "multiple URLs conversion",
 			externalSettings: ExternalSetting{
-				"api": ExternalSettingDomainAlias{
+				"api": ExternalSettingURLAlias{
 					URL: "https://api.example.com",
 					DefaultHeaders: map[string]string{
 						"Authorization": "Bearer token123",
 						"Content-Type":  "application/json",
 					},
 				},
-				"staging": ExternalSettingDomainAlias{
+				"staging": ExternalSettingURLAlias{
 					URL: "https://staging.example.com",
 					DefaultHeaders: map[string]string{
 						"X-Environment": "staging",
 					},
 				},
-				"localhost": ExternalSettingDomainAlias{
+				"localhost": ExternalSettingURLAlias{
 					URL: "http://localhost:8080",
 					DefaultHeaders: map[string]string{
 						"X-Debug": "true",
 					},
 				},
 			},
-			expectedResult: SettingByDomainAlias{
-				DomainAlias("api"): Setting{
-					Domain: "https://api.example.com",
+			expectedResult: SettingByURLAlias{
+				URLAlias("api"): Setting{
+					URL: "https://api.example.com",
 					Headers: map[string]string{
 						"Authorization": "Bearer token123",
 						"Content-Type":  "application/json",
 					},
 				},
-				DomainAlias("staging"): Setting{
-					Domain: "https://staging.example.com",
+				URLAlias("staging"): Setting{
+					URL: "https://staging.example.com",
 					Headers: map[string]string{
 						"X-Environment": "staging",
 					},
 				},
-				DomainAlias("localhost"): Setting{
-					Domain: "http://localhost:8080",
+				URLAlias("localhost"): Setting{
+					URL: "http://localhost:8080",
 					Headers: map[string]string{
 						"X-Debug": "true",
 					},
@@ -218,63 +228,63 @@ func TestSettingsFromExternalSettings(t *testing.T) {
 		{
 			name:             "empty external config",
 			externalSettings: ExternalSetting{},
-			expectedResult:   SettingByDomainAlias{},
+			expectedResult:   SettingByURLAlias{},
 		},
 		{
-			name: "domain with empty headers",
+			name: "URL with empty headers",
 			externalSettings: ExternalSetting{
-				"simple": ExternalSettingDomainAlias{
+				"simple": ExternalSettingURLAlias{
 					URL:            "https://simple.example.com",
 					DefaultHeaders: map[string]string{},
 				},
 			},
-			expectedResult: SettingByDomainAlias{
-				DomainAlias("simple"): Setting{
-					Domain:  "https://simple.example.com",
+			expectedResult: SettingByURLAlias{
+				URLAlias("simple"): Setting{
+					URL:     "https://simple.example.com",
 					Headers: map[string]string{},
 				},
 			},
 		},
 		{
-			name: "domain with nil headers",
+			name: "URL with nil headers",
 			externalSettings: ExternalSetting{
-				"minimal": ExternalSettingDomainAlias{
+				"minimal": ExternalSettingURLAlias{
 					URL:            "https://minimal.example.com",
 					DefaultHeaders: nil,
 				},
 			},
-			expectedResult: SettingByDomainAlias{
-				DomainAlias("minimal"): Setting{
-					Domain:  "https://minimal.example.com",
+			expectedResult: SettingByURLAlias{
+				URLAlias("minimal"): Setting{
+					URL:     "https://minimal.example.com",
 					Headers: nil,
 				},
 			},
 		},
 		{
-			name: "domains with special characters in alias",
+			name: "URLs with special characters in alias",
 			externalSettings: ExternalSetting{
-				"api-v1": ExternalSettingDomainAlias{
+				"api-v1": ExternalSettingURLAlias{
 					URL: "https://api-v1.example.com",
 					DefaultHeaders: map[string]string{
 						"Version": "v1",
 					},
 				},
-				"test_env": ExternalSettingDomainAlias{
+				"test_env": ExternalSettingURLAlias{
 					URL: "https://test-env.example.com",
 					DefaultHeaders: map[string]string{
 						"Environment": "test",
 					},
 				},
 			},
-			expectedResult: SettingByDomainAlias{
-				DomainAlias("api-v1"): Setting{
-					Domain: "https://api-v1.example.com",
+			expectedResult: SettingByURLAlias{
+				URLAlias("api-v1"): Setting{
+					URL: "https://api-v1.example.com",
 					Headers: map[string]string{
 						"Version": "v1",
 					},
 				},
-				DomainAlias("test_env"): Setting{
-					Domain: "https://test-env.example.com",
+				URLAlias("test_env"): Setting{
+					URL: "https://test-env.example.com",
 					Headers: map[string]string{
 						"Environment": "test",
 					},
@@ -292,51 +302,50 @@ func TestSettingsFromExternalSettings(t *testing.T) {
 }
 
 func TestSettingTypes(t *testing.T) {
-	t.Run("DomainAlias type conversion", func(t *testing.T) {
-		alias := DomainAlias("test")
+	t.Run("URLAlias type conversion", func(t *testing.T) {
+		alias := URLAlias("test")
 		require.Equal(t, "test", string(alias))
 
-		settings := make(SettingByDomainAlias)
+		settings := make(SettingByURLAlias)
 		settings[alias] = Setting{
-			Domain:  "https://test.com",
+			URL:     "https://test.com",
 			Headers: map[string]string{"key": "value"},
 		}
 
 		retrieved, exists := settings[alias]
 		require.True(t, exists)
-		require.Equal(t, "https://test.com", retrieved.Domain)
+		require.Equal(t, "https://test.com", retrieved.URL)
 		require.Equal(t, map[string]string{"key": "value"}, retrieved.Headers)
 	})
 
 	t.Run("Setting struct initialization", func(t *testing.T) {
 		setting := Setting{
-			Domain: "https://example.com",
+			URL: "https://example.com",
 			Headers: map[string]string{
 				"Authorization": "Bearer token",
 				"Content-Type":  "application/json",
 			},
 		}
 
-		require.Equal(t, "https://example.com", setting.Domain)
+		require.Equal(t, "https://example.com", setting.URL)
 		require.Equal(t, "Bearer token", setting.Headers["Authorization"])
 		require.Equal(t, "application/json", setting.Headers["Content-Type"])
 	})
 
-	t.Run("SettingByDomainAlias map operations", func(t *testing.T) {
-		settings := SettingByDomainAlias{
-			"test1": Setting{Domain: "https://test1.com", Headers: map[string]string{}},
-			"test2": Setting{Domain: "https://test2.com", Headers: map[string]string{}},
+	t.Run("SettingByURLAlias map operations", func(t *testing.T) {
+		settings := SettingByURLAlias{
+			"test1": Setting{URL: "https://test1.com", Headers: map[string]string{}},
+			"test2": Setting{URL: "https://test2.com", Headers: map[string]string{}},
 		}
 
 		require.Len(t, settings, 2)
-		require.Contains(t, settings, DomainAlias("test1"))
-		require.Contains(t, settings, DomainAlias("test2"))
+		require.Contains(t, settings, URLAlias("test1"))
+		require.Contains(t, settings, URLAlias("test2"))
 
-		// Test iteration
 		count := 0
 		for alias, setting := range settings {
 			require.NotEmpty(t, string(alias))
-			require.NotEmpty(t, setting.Domain)
+			require.NotEmpty(t, setting.URL)
 			count++
 		}
 		require.Equal(t, 2, count)
@@ -378,18 +387,18 @@ func TestGetSettingsIntegration(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, settings, 2)
 
-		prodSetting, exists := settings[DomainAlias("production")]
+		prodSetting, exists := settings[URLAlias("production")]
 		require.True(t, exists)
-		require.Equal(t, "https://api.prod.example.com", prodSetting.Domain)
+		require.Equal(t, "https://api.prod.example.com", prodSetting.URL)
 		require.Equal(t, map[string]string{
 			"Authorization": "Bearer prod-token",
 			"Content-Type":  "application/json",
 			"X-API-Version": "v2",
 		}, prodSetting.Headers)
 
-		devSetting, exists := settings[DomainAlias("development")]
+		devSetting, exists := settings[URLAlias("development")]
 		require.True(t, exists)
-		require.Equal(t, "http://localhost:3000", devSetting.Domain)
+		require.Equal(t, "http://localhost:3000", devSetting.URL)
 		require.Equal(t, map[string]string{
 			"X-Debug": "true",
 		}, devSetting.Headers)

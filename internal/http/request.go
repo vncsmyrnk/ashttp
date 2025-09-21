@@ -38,7 +38,7 @@ func (r Request) buildHTTPRequest(setting config.Setting) (*http.Request, error)
 	switch strings.ToUpper(r.Method) {
 	case http.MethodGet, http.MethodDelete:
 		queryString := QueryString(r.Arguments).ToURL()
-		url := fmt.Sprintf("%s/%s", setting.Domain, r.Path)
+		url := fmt.Sprintf("%s/%s", setting.URL, r.Path)
 		if queryString != "" {
 			url = fmt.Sprintf("%s?%s", url, queryString)
 		}
