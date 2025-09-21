@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
+	"os"
 
 	"github.com/ashttp/internal/http"
 )
@@ -15,28 +15,28 @@ func main() {
 
 	action, err := NewAction(args)
 	if err != nil {
-		log.Println(err)
+		fatal("failed to build action from arguments: %v", err)
 	}
 
 	request := action.Request()
-	config, err := action.Config()
+	setting, err := action.Setting()
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		fatal("failed to load setting: %v", err)
 	}
 
-	req, err := request.ToHTTPRequest(config)
+	req, err := request.ToHTTPRequest(setting)
 	if err != nil {
-		log.Println(err)
+		fatal("failed to build request: %v", err)
 	}
 
 	response, err := http.Execute(req)
 	if err != nil {
-		log.Println(err)
+		fatal("failed to execute request: %v", err)
 	}
 
 	output, err := prettyResponse(response)
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 	}
 
 	fmt.Println(output)
@@ -55,4 +55,9 @@ func prettyResponse(resp []byte) (string, error) {
 	}
 
 	return string(pretty), nil
+}
+
+func fatal(format string, v ...any) {
+	fmt.Printf("[error] %s\n", fmt.Sprintf(format, v...))
+	os.Exit(1)
 }
