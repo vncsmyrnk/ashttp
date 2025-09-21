@@ -25,7 +25,12 @@ jobs:
       - name: Build binary
         run: |
           mkdir -p dist
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/ashttp-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build \
+          -ldflags="-X 'github.com/ashttp/internal/version.Version=${{ github.ref_name }}' \
+                    -X 'github.com/ashttp/internal/version.GitCommit=$(git rev-parse --short HEAD)' \
+                    -X 'github.com/ashttp/internal/version.BuildDate=$(date -u +'%Y-%m-%dT%H:%M:%SZ')'" \
+            -o dist/ashttp-${{ matrix.goos }}-${{ matrix.goarch }} \
+            ./cmd
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4

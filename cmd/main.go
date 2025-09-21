@@ -8,19 +8,26 @@ import (
 	"os"
 
 	"github.com/ashttp/internal/http"
+	"github.com/ashttp/internal/version"
 )
 
 var cliFormatExpected = "<URL-alias> <http-method> [path-components...] [--option value]"
 
 func main() {
+	versionFlag := flag.Bool("v", false, "Print version information and exit")
 	flag.Parse()
+
+	if *versionFlag {
+		showVersion()
+	}
+
 	args := flag.Args()
 
 	action, err := NewAction(args)
 	if err != nil {
 		switch {
 		case errors.Is(err, errInvalidFormat):
-			help()
+			showHelp()
 		default:
 			fatal("failed to build action from arguments: %v", err)
 		}
@@ -70,7 +77,12 @@ func fatal(format string, v ...any) {
 	os.Exit(1)
 }
 
-func help() {
+func showHelp() {
 	fmt.Printf("usage: %s\n", cliFormatExpected)
+	os.Exit(0)
+}
+
+func showVersion() {
+	fmt.Println(version.Info())
 	os.Exit(0)
 }
