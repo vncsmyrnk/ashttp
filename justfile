@@ -1,7 +1,10 @@
 default:
   just --list
 
-example:
+run +args:
+  @go run ./cmd {{args}}
+
+run-example:
   go run ./cmd httpbin get --key value
 
 test:
