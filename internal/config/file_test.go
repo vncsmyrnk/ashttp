@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestLoadConfigFromFile(t *testing.T) {
+func TestLoadSettingFromFile(t *testing.T) {
 	tests := []struct {
-		name           string
-		setupFile      func(t *testing.T) string
-		expectedConfig ExternalConfig
-		expectError    bool
+		name            string
+		setupFile       func(t *testing.T) string
+		expectedSetting ExternalSetting
+		expectError     bool
 	}{
 		{
 			name: "successful load existing config file",
@@ -22,8 +22,8 @@ func TestLoadConfigFromFile(t *testing.T) {
 				tmpDir := t.TempDir()
 				configPath := filepath.Join(tmpDir, "config.json")
 
-				testConfig := ExternalConfig{
-					"example": ExternalConfigDomainAlias{
+				testSetting := ExternalSetting{
+					"example": ExternalSettingDomainAlias{
 						URL: "https://example.com",
 						DefaultHeaders: map[string]string{
 							"Content-Type": "application/json",
@@ -31,7 +31,7 @@ func TestLoadConfigFromFile(t *testing.T) {
 					},
 				}
 
-				data, err := json.MarshalIndent(testConfig, "", "  ")
+				data, err := json.MarshalIndent(testSetting, "", "  ")
 				require.NoError(t, err)
 
 				err = os.WriteFile(configPath, data, 0644)
@@ -39,8 +39,8 @@ func TestLoadConfigFromFile(t *testing.T) {
 
 				return configPath
 			},
-			expectedConfig: ExternalConfig{
-				"example": ExternalConfigDomainAlias{
+			expectedSetting: ExternalSetting{
+				"example": ExternalSettingDomainAlias{
 					URL: "https://example.com",
 					DefaultHeaders: map[string]string{
 						"Content-Type": "application/json",
@@ -55,8 +55,8 @@ func TestLoadConfigFromFile(t *testing.T) {
 				tmpDir := t.TempDir()
 				return filepath.Join(tmpDir, "nonexistent.json")
 			},
-			expectedConfig: defaultConfig,
-			expectError:    false,
+			expectedSetting: defaultSetting,
+			expectError:     false,
 		},
 		{
 			name: "invalid json file",
@@ -69,8 +69,8 @@ func TestLoadConfigFromFile(t *testing.T) {
 
 				return configPath
 			},
-			expectedConfig: nil,
-			expectError:    true,
+			expectedSetting: nil,
+			expectError:     true,
 		},
 		{
 			name: "empty json file",
@@ -83,8 +83,8 @@ func TestLoadConfigFromFile(t *testing.T) {
 
 				return configPath
 			},
-			expectedConfig: ExternalConfig{},
-			expectError:    false,
+			expectedSetting: ExternalSetting{},
+			expectError:     false,
 		},
 	}
 
@@ -92,20 +92,20 @@ func TestLoadConfigFromFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			configPath := tt.setupFile(t)
 
-			result, err := loadConfigFromFile(configPath)
+			result, err := loadSettingFromFile(configPath)
 
 			if tt.expectError {
 				require.Error(t, err)
 				require.Nil(t, result)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedConfig, result)
+				require.Equal(t, tt.expectedSetting, result)
 			}
 		})
 	}
 }
 
-func TestCreateDefaultConfig(t *testing.T) {
+func TestCreateDefaultSetting(t *testing.T) {
 	tests := []struct {
 		name        string
 		setupPath   func(t *testing.T) string
@@ -146,7 +146,7 @@ func TestCreateDefaultConfig(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			configPath := tt.setupPath(t)
 
-			err := createDefaultConfig(configPath)
+			err := createDefaultSetting(configPath)
 
 			if tt.expectError {
 				require.Error(t, err)
@@ -158,12 +158,12 @@ func TestCreateDefaultConfig(t *testing.T) {
 				data, err := os.ReadFile(configPath)
 				require.NoError(t, err)
 
-				var config ExternalConfig
-				err = json.Unmarshal(data, &config)
+				var setting ExternalSetting
+				err = json.Unmarshal(data, &setting)
 				require.NoError(t, err)
-				require.Equal(t, defaultConfig, config)
+				require.Equal(t, defaultSetting, setting)
 
-				expectedData, err := json.MarshalIndent(defaultConfig, "", "  ")
+				expectedData, err := json.MarshalIndent(defaultSetting, "", "  ")
 				require.NoError(t, err)
 				require.Equal(t, expectedData, data)
 			}
@@ -171,23 +171,23 @@ func TestCreateDefaultConfig(t *testing.T) {
 	}
 }
 
-func TestLoadConfigIntegration(t *testing.T) {
+func TestLoadSettingIntegration(t *testing.T) {
 	tests := []struct {
 		name                string
-		configContent       ExternalConfig
+		setting             ExternalSetting
 		expectedLoadSuccess bool
 	}{
 		{
-			name: "complex config with multiple domains",
-			configContent: ExternalConfig{
-				"api": ExternalConfigDomainAlias{
+			name: "complex setting with multiple domains",
+			setting: ExternalSetting{
+				"api": ExternalSettingDomainAlias{
 					URL: "https://api.example.com",
 					DefaultHeaders: map[string]string{
 						"Authorization": "Bearer token123",
 						"Content-Type":  "application/json",
 					},
 				},
-				"staging": ExternalConfigDomainAlias{
+				"staging": ExternalSettingDomainAlias{
 					URL: "https://staging.example.com",
 					DefaultHeaders: map[string]string{
 						"X-Environment": "staging",
@@ -197,9 +197,9 @@ func TestLoadConfigIntegration(t *testing.T) {
 			expectedLoadSuccess: true,
 		},
 		{
-			name: "config with empty headers",
-			configContent: ExternalConfig{
-				"simple": ExternalConfigDomainAlias{
+			name: "setting with empty headers",
+			setting: ExternalSetting{
+				"simple": ExternalSettingDomainAlias{
 					URL:            "https://simple.example.com",
 					DefaultHeaders: map[string]string{},
 				},
@@ -207,9 +207,9 @@ func TestLoadConfigIntegration(t *testing.T) {
 			expectedLoadSuccess: true,
 		},
 		{
-			name: "config with nil headers",
-			configContent: ExternalConfig{
-				"minimal": ExternalConfigDomainAlias{
+			name: "setting with nil headers",
+			setting: ExternalSetting{
+				"minimal": ExternalSettingDomainAlias{
 					URL:            "https://minimal.example.com",
 					DefaultHeaders: nil,
 				},
@@ -223,17 +223,17 @@ func TestLoadConfigIntegration(t *testing.T) {
 			tmpDir := t.TempDir()
 			configPath := filepath.Join(tmpDir, "config.json")
 
-			data, err := json.MarshalIndent(tt.configContent, "", "  ")
+			data, err := json.MarshalIndent(tt.setting, "", "  ")
 			require.NoError(t, err)
 
 			err = os.WriteFile(configPath, data, 0644)
 			require.NoError(t, err)
 
-			result, err := loadConfigFromFile(configPath)
+			result, err := loadSettingFromFile(configPath)
 
 			if tt.expectedLoadSuccess {
 				require.NoError(t, err)
-				require.Equal(t, tt.configContent, result)
+				require.Equal(t, tt.setting, result)
 			} else {
 				require.Error(t, err)
 			}
@@ -241,13 +241,13 @@ func TestLoadConfigIntegration(t *testing.T) {
 	}
 }
 
-func TestDefaultConfigValues(t *testing.T) {
-	require.NotEmpty(t, defaultConfig)
-	require.Contains(t, defaultConfig, "httpbin")
+func TestDefaultSettingValues(t *testing.T) {
+	require.NotEmpty(t, defaultSetting)
+	require.Contains(t, defaultSetting, "httpbin")
 
-	httpbinConfig := defaultConfig["httpbin"]
-	require.Equal(t, "https://httpbin.dev/anything", httpbinConfig.URL)
-	require.Equal(t, map[string]string{"authorization": "123"}, httpbinConfig.DefaultHeaders)
+	httpbinSetting := defaultSetting["httpbin"]
+	require.Equal(t, "https://httpbin.dev/anything", httpbinSetting.URL)
+	require.Equal(t, map[string]string{"authorization": "123"}, httpbinSetting.DefaultHeaders)
 }
 
 func TestFilePathVariables(t *testing.T) {

@@ -16,7 +16,7 @@ type Request struct {
 	Body    map[string]any
 }
 
-func (r Request) ToHTTPRequest(config config.Config) (*http.Request, error) {
+func (r Request) ToHTTPRequest(config config.Setting) (*http.Request, error) {
 	body, err := json.Marshal(r.Body)
 	if err != nil {
 		return nil, err

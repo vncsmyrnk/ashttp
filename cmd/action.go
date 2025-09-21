@@ -55,17 +55,17 @@ func (a Action) Request() internalhttp.Request {
 	}
 }
 
-func (a Action) Config() (config.Config, error) {
-	configs, err := config.GetConfigs()
+func (a Action) Setting() (config.Setting, error) {
+	settings, err := config.GetSettings()
 	if err != nil {
-		return config.Config{}, err
+		return config.Setting{}, err
 	}
 
 	domainAlias := config.DomainAlias(a.DomainAlias)
-	if config, ok := configs[domainAlias]; ok {
+	if config, ok := settings[domainAlias]; ok {
 		return config, nil
 	}
 
-	return config.Config{}, fmt.Errorf(
-		"no config found for %s, make sure it exists at %s", domainAlias, config.GetDefaultConfigPath())
+	return config.Setting{}, fmt.Errorf(
+		"no config found for %s, make sure it exists at %s", domainAlias, config.GetDefaultSettingPath())
 }

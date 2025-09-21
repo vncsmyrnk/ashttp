@@ -1,37 +1,36 @@
 package config
 
-type Config struct {
+type Setting struct {
 	Domain  string
 	Headers map[string]string
 }
 
 type DomainAlias string
 
-// nolint:revive
-type ConfigByDomainAlias map[DomainAlias]Config
+type SettingByDomainAlias map[DomainAlias]Setting
 
-func GetConfigs() (ConfigByDomainAlias, error) {
-	configs, err := loadConfigFromFile(defaultFilePath)
+func GetSettings() (SettingByDomainAlias, error) {
+	settings, err := loadSettingFromFile(defaultFilePath)
 	if err != nil {
-		return ConfigByDomainAlias{}, err
+		return SettingByDomainAlias{}, err
 	}
 
-	return configsFromExternalConfigs(configs), nil
+	return settingsFromExternalSettings(settings), nil
 }
 
-func GetDefaultConfigPath() string {
+func GetDefaultSettingPath() string {
 	return defaultFilePath
 }
 
-func configsFromExternalConfigs(externalConfigs ExternalConfig) ConfigByDomainAlias {
-	configs := make(ConfigByDomainAlias)
-	for k, v := range externalConfigs {
+func settingsFromExternalSettings(externalSettings ExternalSetting) SettingByDomainAlias {
+	settings := make(SettingByDomainAlias)
+	for k, v := range externalSettings {
 		domainAlias := DomainAlias(k)
-		configs[domainAlias] = Config{
+		settings[domainAlias] = Setting{
 			Domain:  v.URL,
 			Headers: v.DefaultHeaders,
 		}
 	}
 
-	return configs
+	return settings
 }

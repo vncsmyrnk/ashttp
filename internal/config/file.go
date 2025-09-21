@@ -8,18 +8,18 @@ import (
 	"path/filepath"
 )
 
-type ExternalConfigDomainAlias struct {
+type ExternalSettingDomainAlias struct {
 	URL            string            `json:"url"`
 	DefaultHeaders map[string]string `json:"defaultHeaders"`
 }
 
-type ExternalConfig map[string]ExternalConfigDomainAlias
+type ExternalSetting map[string]ExternalSettingDomainAlias
 
 var defaultFileFolder = path.Join(os.ExpandEnv("$HOME"), ".config", "ashttp")
 var defaultFilePath = path.Join(defaultFileFolder, "config.json")
 
-var defaultConfig = ExternalConfig{
-	"httpbin": ExternalConfigDomainAlias{
+var defaultSetting = ExternalSetting{
+	"httpbin": ExternalSettingDomainAlias{
 		URL: "https://httpbin.dev/anything",
 		DefaultHeaders: map[string]string{
 			"authorization": "123",
@@ -27,9 +27,9 @@ var defaultConfig = ExternalConfig{
 	},
 }
 
-func loadConfigFromFile(filePath string) (ExternalConfig, error) {
+func loadSettingFromFile(filePath string) (ExternalSetting, error) {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		if createErr := createDefaultConfig(filePath); createErr != nil {
+		if createErr := createDefaultSetting(filePath); createErr != nil {
 			return nil, createErr
 		}
 	}
@@ -39,7 +39,7 @@ func loadConfigFromFile(filePath string) (ExternalConfig, error) {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	var configs ExternalConfig
+	var configs ExternalSetting
 	if err := json.Unmarshal(data, &configs); err != nil {
 		return nil, fmt.Errorf("failed to parse JSON: %w", err)
 	}
@@ -47,8 +47,8 @@ func loadConfigFromFile(filePath string) (ExternalConfig, error) {
 	return configs, nil
 }
 
-func createDefaultConfig(filePath string) error {
-	data, err := json.MarshalIndent(defaultConfig, "", "  ")
+func createDefaultSetting(filePath string) error {
+	data, err := json.MarshalIndent(defaultSetting, "", "  ")
 	if err != nil {
 		return err
 	}

@@ -17,7 +17,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 	tests := []struct {
 		name            string
 		request         Request
-		config          config.Config
+		setting         config.Setting
 		expectedURL     string
 		expectedMethod  string
 		expectedBody    string
@@ -31,7 +31,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				Headers: nil,
 				Body:    nil,
 			},
-			config: config.Config{
+			setting: config.Setting{
 				Domain:  "https://api.example.com",
 				Headers: nil,
 			},
@@ -44,13 +44,13 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "request with path and config headers",
+			name: "request with path and setting headers",
 			request: Request{
 				Path:    "posts/123",
 				Headers: nil,
 				Body:    nil,
 			},
-			config: config.Config{
+			setting: config.Setting{
 				Domain: "https://jsonplaceholder.typicode.com",
 				Headers: map[string]string{
 					"Authorization": "Bearer token123",
@@ -77,7 +77,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				},
 				Body: nil,
 			},
-			config: config.Config{
+			setting: config.Setting{
 				Domain: "https://localhost:8080",
 				Headers: map[string]string{
 					"Authorization": "Basic dXNlcjpwYXNz",
@@ -105,7 +105,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 					"age":   30,
 				},
 			},
-			config: config.Config{
+			setting: config.Setting{
 				Domain:  "https://api.example.com",
 				Headers: nil,
 			},
@@ -133,7 +133,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 					},
 				},
 			},
-			config: config.Config{
+			setting: config.Setting{
 				Domain:  "https://test.com",
 				Headers: nil,
 			},
@@ -154,7 +154,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 					"invalid": make(chan int), // channels cannot be marshaled to JSON
 				},
 			},
-			config: config.Config{
+			setting: config.Setting{
 				Domain:  "https://example.com",
 				Headers: nil,
 			},
@@ -167,7 +167,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				Headers: nil,
 				Body:    nil,
 			},
-			config: config.Config{
+			setting: config.Setting{
 				Domain:  "https://api.example.com",
 				Headers: nil,
 			},
@@ -189,7 +189,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 				},
 				Body: nil,
 			},
-			config: config.Config{
+			setting: config.Setting{
 				Domain: "https://api.test.com",
 				Headers: map[string]string{
 					"Authorization":  "Bearer old-token", // Should be overridden
@@ -211,7 +211,7 @@ func TestRequest_ToHTTPRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, err := tt.request.ToHTTPRequest(tt.config)
+			req, err := tt.request.ToHTTPRequest(tt.setting)
 
 			if tt.expectError {
 				require.Error(t, err, "ToHTTPRequest() should return an error")
@@ -368,7 +368,7 @@ func TestExecute_Integration(t *testing.T) {
 			},
 		}
 
-		cfg := config.Config{
+		cfg := config.Setting{
 			Domain: server.URL,
 			Headers: map[string]string{
 				"Authorization": "Bearer test-token",
@@ -397,7 +397,7 @@ func BenchmarkToHTTPRequest(b *testing.B) {
 		},
 	}
 
-	cfg := config.Config{
+	setting := config.Setting{
 		Domain: "https://api.example.com",
 		Headers: map[string]string{
 			"Authorization": "Bearer token",
@@ -406,7 +406,7 @@ func BenchmarkToHTTPRequest(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := request.ToHTTPRequest(cfg)
+		_, err := request.ToHTTPRequest(setting)
 		require.NoError(b, err, "ToHTTPRequest() should not fail")
 	}
 }
