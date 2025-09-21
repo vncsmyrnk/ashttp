@@ -19,6 +19,10 @@ func GetConfigs() (ConfigByDomainAlias, error) {
 	return configsFromExternalConfigs(configs), nil
 }
 
+func GetDefaultConfigPath() string {
+	return defaultFilePath
+}
+
 func configsFromExternalConfigs(externalConfigs ExternalConfig) ConfigByDomainAlias {
 	configs := make(ConfigByDomainAlias)
 	for k, v := range externalConfigs {

@@ -66,5 +66,6 @@ func (a Action) Config() (config.Config, error) {
 		return config, nil
 	}
 
-	return config.Config{}, fmt.Errorf("failed to get config")
+	return config.Config{}, fmt.Errorf(
+		"no config found for %s, make sure it exists at %s", domainAlias, config.GetDefaultConfigPath())
 }
